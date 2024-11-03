@@ -5,7 +5,7 @@
     <style>
       body {
         margin: 0;
-        height: 100vh;
+        height: 100dvh;
         display: flex;
         flex-direction: column;
         font-family: Arial, sans-serif;
@@ -38,6 +38,11 @@
         color: white;
       }
 
+      .previous {
+        background: rgba(76, 175, 80, 0.5);
+        color: white;
+      }
+
       #center {
         background: #999;
         display: flex;
@@ -48,7 +53,6 @@
         text-align: center;
         padding: 10px;
         gap: 10px;
-        position: relative;
       }
 
       #speedControl {
@@ -58,19 +62,25 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        position: relative;
+        gap: 10px;
       }
 
-      #speedSlider {
-        writing-mode: bt-lr;
-        -webkit-appearance: slider-vertical;
-        width: 40px;
-        height: 90%;
+      .speed-btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        background: #4caf50;
+        color: white;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.2s;
+      }
+
+      .speed-btn:hover {
+        background: #45a049;
       }
 
       #speedLabel {
-        position: absolute;
-        bottom: 5px;
         background: rgba(0, 0, 0, 0.5);
         color: white;
         padding: 2px 8px;
@@ -87,15 +97,9 @@
       <div class="cell" data-pos="W">⬅️</div>
       <div id="center">
         <div id="speedControl">
-          <input
-            type="range"
-            id="speedSlider"
-            min="200"
-            max="2000"
-            value="700"
-            step="100"
-          />
+          <button class="speed-btn" id="fasterBtn">Faster (-100ms)</button>
           <span id="speedLabel">0.7 seconds</span>
+          <button class="speed-btn" id="slowerBtn">Slower (+100ms)</button>
         </div>
       </div>
       <div class="cell" data-pos="E">➡️</div>
@@ -108,57 +112,75 @@
       const positions = ["NW", "N", "NE", "W", "E", "SW", "S", "SE"];
       let intervalId = null;
       let lastPosition = null;
-      const speedSlider = document.getElementById("speedSlider");
+      let currentSpeed = 700; // Initial speed in milliseconds
       const speedLabel = document.getElementById("speedLabel");
+      const fasterBtn = document.getElementById("fasterBtn");
+      const slowerBtn = document.getElementById("slowerBtn");
 
       function getRandomPosition() {
-        // Filter out the last position
         const availablePositions = positions.filter(
           (pos) => pos !== lastPosition
         );
         let randomIndex = Math.floor(Math.random() * availablePositions.length);
         let position = availablePositions[randomIndex];
-        lastPosition = position; // Store this position for next time
         return position;
       }
 
       function highlightPosition(position) {
-        document.querySelectorAll(".cell").forEach((cell) => {
+        // Remove previous highlight
+        document.querySelectorAll(".previous").forEach((cell) => {
+          cell.classList.remove("previous");
+        });
+
+        // Set previous position
+        if (lastPosition) {
+          document
+            .querySelector(`[data-pos="${lastPosition}"]`)
+            .classList.add("previous");
+        }
+
+        // Remove active highlight
+        document.querySelectorAll(".active").forEach((cell) => {
           cell.classList.remove("active");
         });
 
+        // Set new active position
         if (position) {
           document
             .querySelector(`[data-pos="${position}"]`)
             .classList.add("active");
         }
+
+        lastPosition = position;
       }
 
-      function updateSpeedLabel(value) {
-        const seconds = value / 1000;
+      function updateSpeedLabel() {
+        const seconds = currentSpeed / 1000;
         speedLabel.textContent = `${seconds.toFixed(1)} second${
           seconds !== 1 ? "s" : ""
         }`;
       }
 
       function startAutoPlay() {
-        // Clear any existing interval
         if (intervalId) {
           clearInterval(intervalId);
         }
-        // Start new interval
         intervalId = setInterval(() => {
           highlightPosition(getRandomPosition());
-        }, speedSlider.value);
+        }, currentSpeed);
       }
 
-      speedSlider.addEventListener("input", (e) => {
-        updateSpeedLabel(e.target.value);
+      function changeSpeed(delta) {
+        currentSpeed = Math.max(200, Math.min(2000, currentSpeed + delta));
+        updateSpeedLabel();
         startAutoPlay();
-      });
+      }
 
-      // Initialize speed label and start auto-play
-      updateSpeedLabel(speedSlider.value);
+      fasterBtn.addEventListener("click", () => changeSpeed(-100));
+      slowerBtn.addEventListener("click", () => changeSpeed(100));
+
+      // Initialize
+      updateSpeedLabel();
       startAutoPlay();
     </script>
   </body>
