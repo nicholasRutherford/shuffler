@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Card Shuffler</title>
+    <style>
+      body {
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        font-family: Arial, sans-serif;
+        touch-action: manipulation;
+        user-select: none;
+      }
+
+      #grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+        height: 100%;
+        gap: 4px;
+        padding: 4px;
+        background: #f0f0f0;
+      }
+
+      .cell {
+        background: #ddd;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        transition: background-color 0.3s;
+      }
+
+      .active {
+        background: #4caf50;
+        color: white;
+      }
+
+      #center {
+        background: #999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        text-align: center;
+        padding: 10px;
+      }
+
+      #controls {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.9);
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      button {
+        padding: 10px 20px;
+        font-size: 18px;
+        border: none;
+        border-radius: 5px;
+        background: #2196f3;
+        color: white;
+        cursor: pointer;
+      }
+
+      button:active {
+        background: #1976d2;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="grid">
+      <div class="cell" data-pos="NW">↖️</div>
+      <div class="cell" data-pos="N">⬆️</div>
+      <div class="cell" data-pos="NE">↗️</div>
+      <div class="cell" data-pos="W">⬅️</div>
+      <div id="center">Place phone here</div>
+      <div class="cell" data-pos="E">➡️</div>
+      <div class="cell" data-pos="SW">↙️</div>
+      <div class="cell" data-pos="S">⬇️</div>
+      <div class="cell" data-pos="SE">↘️</div>
+    </div>
+    <div id="controls">
+      <button id="nextBtn">Next Card</button>
+    </div>
+
+    <script>
+      const positions = ["NW", "N", "NE", "W", "E", "SW", "S", "SE"];
+
+      function getRandomPosition() {
+        let randomIndex = Math.floor(Math.random() * positions.length);
+        let position = positions[randomIndex];
+        return position;
+      }
+
+      function highlightPosition(position) {
+        // First clear any existing highlights
+        document.querySelectorAll(".cell").forEach((cell) => {
+          cell.classList.remove("active");
+        });
+
+        if (position) {
+          document
+            .querySelector(`[data-pos="${position}"]`)
+            .classList.add("active");
+        }
+      }
+
+      document.getElementById("nextBtn").addEventListener("click", () => {
+        let position = getRandomPosition();
+        highlightPosition(position);
+      });
+
+      // Enable starting by tapping anywhere
+      document.body.addEventListener("click", (e) => {
+        if (e.target.tagName !== "BUTTON") {
+          document.getElementById("nextBtn").click();
+        }
+      });
+    </script>
+  </body>
+</html>
