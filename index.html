@@ -48,48 +48,34 @@
         text-align: center;
         padding: 10px;
         gap: 10px;
+        position: relative;
       }
 
       #speedControl {
-        width: 80%;
+        height: 100%;
+        width: 100%;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 5px;
+        justify-content: center;
+        position: relative;
       }
 
       #speedSlider {
-        width: 100%;
+        writing-mode: bt-lr;
+        -webkit-appearance: slider-vertical;
+        width: 40px;
+        height: 90%;
       }
 
-      #controls {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        padding: 20px;
-        background: rgba(255, 255, 255, 0.9);
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-      }
-
-      button {
-        padding: 10px 20px;
-        font-size: 18px;
-        border: none;
-        border-radius: 5px;
-        background: #2196f3;
+      #speedLabel {
+        position: absolute;
+        bottom: 5px;
+        background: rgba(0, 0, 0, 0.5);
         color: white;
-        cursor: pointer;
-      }
-
-      button:active {
-        background: #1976d2;
-      }
-
-      .playing {
-        background: #f44336;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 14px;
       }
     </style>
   </head>
@@ -106,12 +92,11 @@
             id="speedSlider"
             min="200"
             max="2000"
-            value="1000"
+            value="700"
             step="100"
           />
-          <span id="speedLabel">1 second</span>
+          <span id="speedLabel">0.7 seconds</span>
         </div>
-        <button id="playPauseBtn">Start Auto</button>
       </div>
       <div class="cell" data-pos="E">➡️</div>
       <div class="cell" data-pos="SW">↙️</div>
@@ -122,13 +107,18 @@
     <script>
       const positions = ["NW", "N", "NE", "W", "E", "SW", "S", "SE"];
       let intervalId = null;
-      const playPauseBtn = document.getElementById("playPauseBtn");
+      let lastPosition = null;
       const speedSlider = document.getElementById("speedSlider");
       const speedLabel = document.getElementById("speedLabel");
 
       function getRandomPosition() {
-        let randomIndex = Math.floor(Math.random() * positions.length);
-        let position = positions[randomIndex];
+        // Filter out the last position
+        const availablePositions = positions.filter(
+          (pos) => pos !== lastPosition
+        );
+        let randomIndex = Math.floor(Math.random() * availablePositions.length);
+        let position = availablePositions[randomIndex];
+        lastPosition = position; // Store this position for next time
         return position;
       }
 
@@ -146,52 +136,30 @@
 
       function updateSpeedLabel(value) {
         const seconds = value / 1000;
-        speedLabel.textContent = `${seconds} second${seconds !== 1 ? "s" : ""}`;
+        speedLabel.textContent = `${seconds.toFixed(1)} second${
+          seconds !== 1 ? "s" : ""
+        }`;
       }
 
-      function toggleAutoPlay() {
+      function startAutoPlay() {
+        // Clear any existing interval
         if (intervalId) {
           clearInterval(intervalId);
-          intervalId = null;
-          playPauseBtn.textContent = "Start Auto";
-          playPauseBtn.classList.remove("playing");
-        } else {
-          playPauseBtn.textContent = "Stop Auto";
-          playPauseBtn.classList.add("playing");
-          // Trigger once immediately
-          highlightPosition(getRandomPosition());
-          // Then start the interval
-          intervalId = setInterval(() => {
-            highlightPosition(getRandomPosition());
-          }, speedSlider.value);
         }
+        // Start new interval
+        intervalId = setInterval(() => {
+          highlightPosition(getRandomPosition());
+        }, speedSlider.value);
       }
-
-      playPauseBtn.addEventListener("click", toggleAutoPlay);
 
       speedSlider.addEventListener("input", (e) => {
         updateSpeedLabel(e.target.value);
-        if (intervalId) {
-          clearInterval(intervalId);
-          intervalId = setInterval(() => {
-            highlightPosition(getRandomPosition());
-          }, e.target.value);
-        }
+        startAutoPlay();
       });
 
-      // Initialize speed label
+      // Initialize speed label and start auto-play
       updateSpeedLabel(speedSlider.value);
-
-      // Enable manual advancement by tapping anywhere except controls
-      document.body.addEventListener("click", (e) => {
-        if (
-          e.target.tagName !== "BUTTON" &&
-          e.target.tagName !== "INPUT" &&
-          !intervalId
-        ) {
-          highlightPosition(getRandomPosition());
-        }
-      });
+      startAutoPlay();
     </script>
   </body>
 </html>
