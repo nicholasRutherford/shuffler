@@ -41,11 +41,25 @@
       #center {
         background: #999;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
         font-size: 18px;
         text-align: center;
         padding: 10px;
+        gap: 10px;
+      }
+
+      #speedControl {
+        width: 80%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+      }
+
+      #speedSlider {
+        width: 100%;
       }
 
       #controls {
@@ -73,6 +87,10 @@
       button:active {
         background: #1976d2;
       }
+
+      .playing {
+        background: #f44336;
+      }
     </style>
   </head>
   <body>
@@ -81,18 +99,32 @@
       <div class="cell" data-pos="N">⬆️</div>
       <div class="cell" data-pos="NE">↗️</div>
       <div class="cell" data-pos="W">⬅️</div>
-      <div id="center">Place phone here</div>
+      <div id="center">
+        <div id="speedControl">
+          <input
+            type="range"
+            id="speedSlider"
+            min="200"
+            max="2000"
+            value="1000"
+            step="100"
+          />
+          <span id="speedLabel">1 second</span>
+        </div>
+        <button id="playPauseBtn">Start Auto</button>
+      </div>
       <div class="cell" data-pos="E">➡️</div>
       <div class="cell" data-pos="SW">↙️</div>
       <div class="cell" data-pos="S">⬇️</div>
       <div class="cell" data-pos="SE">↘️</div>
     </div>
-    <div id="controls">
-      <button id="nextBtn">Next Card</button>
-    </div>
 
     <script>
       const positions = ["NW", "N", "NE", "W", "E", "SW", "S", "SE"];
+      let intervalId = null;
+      const playPauseBtn = document.getElementById("playPauseBtn");
+      const speedSlider = document.getElementById("speedSlider");
+      const speedLabel = document.getElementById("speedLabel");
 
       function getRandomPosition() {
         let randomIndex = Math.floor(Math.random() * positions.length);
@@ -101,7 +133,6 @@
       }
 
       function highlightPosition(position) {
-        // First clear any existing highlights
         document.querySelectorAll(".cell").forEach((cell) => {
           cell.classList.remove("active");
         });
@@ -113,15 +144,52 @@
         }
       }
 
-      document.getElementById("nextBtn").addEventListener("click", () => {
-        let position = getRandomPosition();
-        highlightPosition(position);
+      function updateSpeedLabel(value) {
+        const seconds = value / 1000;
+        speedLabel.textContent = `${seconds} second${seconds !== 1 ? "s" : ""}`;
+      }
+
+      function toggleAutoPlay() {
+        if (intervalId) {
+          clearInterval(intervalId);
+          intervalId = null;
+          playPauseBtn.textContent = "Start Auto";
+          playPauseBtn.classList.remove("playing");
+        } else {
+          playPauseBtn.textContent = "Stop Auto";
+          playPauseBtn.classList.add("playing");
+          // Trigger once immediately
+          highlightPosition(getRandomPosition());
+          // Then start the interval
+          intervalId = setInterval(() => {
+            highlightPosition(getRandomPosition());
+          }, speedSlider.value);
+        }
+      }
+
+      playPauseBtn.addEventListener("click", toggleAutoPlay);
+
+      speedSlider.addEventListener("input", (e) => {
+        updateSpeedLabel(e.target.value);
+        if (intervalId) {
+          clearInterval(intervalId);
+          intervalId = setInterval(() => {
+            highlightPosition(getRandomPosition());
+          }, e.target.value);
+        }
       });
 
-      // Enable starting by tapping anywhere
+      // Initialize speed label
+      updateSpeedLabel(speedSlider.value);
+
+      // Enable manual advancement by tapping anywhere except controls
       document.body.addEventListener("click", (e) => {
-        if (e.target.tagName !== "BUTTON") {
-          document.getElementById("nextBtn").click();
+        if (
+          e.target.tagName !== "BUTTON" &&
+          e.target.tagName !== "INPUT" &&
+          !intervalId
+        ) {
+          highlightPosition(getRandomPosition());
         }
       });
     </script>
